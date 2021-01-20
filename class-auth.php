@@ -136,7 +136,6 @@ class Auth {
 		$username    = $request->get_param( 'username' );
 		$password    = $request->get_param( 'password' );
 		$custom_auth = $request->get_param( 'custom_auth' );
-		//$nonce = $request->get_param( '' )
 
 		// First thing, check the secret key if not exist return a error.
 		if ( ! $secret_key ) {
