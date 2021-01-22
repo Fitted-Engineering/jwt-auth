@@ -289,9 +289,15 @@ class Auth {
 			$auth = isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : false;
 		}
 
-		// Check if someone is logged into the admin and set auth to true if so
-		if(isset($_COOKIE[AUTH_COOKIE])) {
-			$auth = true;
+		$hash = end(explode("_", AUTH_COOKIE));
+
+		if(! $auth) {
+			foreach(array_keys($_COOKIE) as $key) {
+				if(end(explode("_", $key)) === $hash) {
+					$auth = true;
+					break;
+				}
+			}
 		}
 		
 		if ( ! $auth ) {
