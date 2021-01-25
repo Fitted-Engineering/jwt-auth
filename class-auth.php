@@ -282,13 +282,24 @@ class Auth {
 		 * return the user.
 		 */
 		$headerkey = apply_filters( 'jwt_auth_authorization_header', 'HTTP_AUTHORIZATION' );
-		$auth      = isset( $_SERVER[ $headerkey ] ) ? $_SERVER[ $headerkey ] : false;
+		$auth      = isset( $_SERVER[ $headerkey ] )? $_SERVER[ $headerkey ] : false;
 
 		// Double check for different auth header string (server dependent).
 		if ( ! $auth ) {
 			$auth = isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : false;
 		}
 
+		$hash = end(explode("_", AUTH_COOKIE));
+
+		if(! $auth) {
+			foreach(array_keys($_COOKIE) as $key) {
+				if(end(explode("_", $key)) === $hash) {
+					$auth = true;
+					break;
+				}
+			}
+		}
+		
 		if ( ! $auth ) {
 			return new WP_REST_Response(
 				array(
@@ -306,6 +317,17 @@ class Auth {
 		 * If the format is wrong return the user.
 		 */
 		list($token) = sscanf( $auth, 'Bearer %s' );
+
+		if (!$token) {
+            // Check if Basic Auth is used and create a token if so
+            list($username, $password) = explode( ':', base64_decode( substr( $auth, 6 ) ) );
+            $request = new WP_REST_Request( 'POST', '/wp-json/jwt-auth/v1/token' );
+            $request->set_param( 'username', $username );
+            $request->set_param( 'password', $password );
+            $token = $this->generate_token( $request );
+            if (is_array($token) && isset($token['token'])) $token = $token['token'];
+            return;
+        }
 
 		if ( ! $token ) {
 			return new WP_REST_Response(
