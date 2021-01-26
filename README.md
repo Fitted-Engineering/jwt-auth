@@ -57,9 +57,9 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
 ### Configurate the Secret Key
 
-The JWT needs a **private** to sign the token. It must be unique and never be revealed.
+The JWT needs a **private key** to sign the token. It must be unique and never be revealed.
 
-To add the **private**, edit your wp-config.php file and add a new constant called **JWT_AUTH_SECRET_KEY**.
+To add the **private key**, edit your wp-config.php file and add a new constant called **JWT_AUTH_SECRET_KEY**.
 
 ```php
 define('JWT_PRIVATE_KEY', '/path/to/rsa/pem/file');
