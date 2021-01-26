@@ -66,7 +66,6 @@ class Devices {
 		$pass = apply_filters( 'jwt_auth_pass', $pass );
 
 		$payload['data']['user']['device'] = $current_device;
-		$payload['data']['user']['pass']   = $pass;
 
 		return $payload;
 	}

@@ -131,7 +131,7 @@ class Auth {
 	 * @return WP_REST_Response The response.
 	 */
 	public function get_token( WP_REST_Request $request ) {
-		$secret_key = defined( 'JWT_AUTH_SECRET_KEY' ) ? JWT_AUTH_SECRET_KEY : false;
+		$secret_key = defined( 'JWT_PRIVATE_KEY' ) ? JWT_PRIVATE_KEY : false;
 
 		$username    = $request->get_param( 'username' );
 		$password    = $request->get_param( 'password' );
@@ -203,8 +203,12 @@ class Auth {
 
 		$alg = $this->get_alg();
 
+		$keyfile = fopen(JWT_PRIVATE_KEY, 'r');
+		$privatekey = fread($keyfile, filesize(JWT_PRIVATE_KEY));
+		fclose($keyfile);
+
 		// Let the user modify the token data before the sign.
-		$token = JWT::encode( apply_filters( 'jwt_auth_payload', $payload, $user ), $secret_key, $alg );
+		$token = JWT::encode( apply_filters( 'jwt_auth_payload', $payload, $user ), $privatekey, $alg );
 
 		// If return as raw token string.
 		if ( $return_raw ) {
@@ -249,7 +253,7 @@ class Auth {
 	 * @return string $alg
 	 */
 	public function get_alg() {
-		return apply_filters( 'jwt_auth_alg', 'HS256' );
+		return apply_filters( 'jwt_auth_alg', 'RS256' );
 	}
 
 	/**
@@ -342,7 +346,7 @@ class Auth {
 		}
 
 		// Get the Secret Key.
-		$secret_key = defined( 'JWT_AUTH_SECRET_KEY' ) ? JWT_AUTH_SECRET_KEY : false;
+		$secret_key = defined( 'JWT_PRIVATE_KEY' ) ? JWT_PRIVATE_KEY : false;
 
 		if ( ! $secret_key ) {
 			return new WP_REST_Response(
