@@ -364,7 +364,10 @@ class Auth {
 		// Try to decode the token.
 		try {
 			$alg     = $this->get_alg();
-			$payload = JWT::decode( $token, $secret_key, array( $alg ) );
+			$keyfile = fopen(JWT_PUBLIC_KEY, 'r');
+			$publickey = fread($keyfile, filesize(JWT_PUBLIC_KEY));
+			fclose($keyfile);
+			$payload = JWT::decode( $token, $publickey, array( $alg ) );
 
 			// The Token is decoded now validate the iss.
 			if ( $payload->iss !== $this->get_iss() ) {

@@ -92,13 +92,6 @@ class Devices {
 			}
 		}
 
-		// Check if user changed the password.
-		$pass = get_user_meta( $user->ID, 'jwt_auth_pass', true );
-
-		if ( $payload->data->user->pass !== $pass ) {
-			return 'password changed';
-		}
-
 		return '';
 	}
 
