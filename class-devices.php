@@ -66,7 +66,6 @@ class Devices {
 		$pass = apply_filters( 'jwt_auth_pass', $pass );
 
 		$payload['data']['user']['device'] = $current_device;
-		$payload['data']['user']['pass']   = $pass;
 
 		return $payload;
 	}
@@ -91,13 +90,6 @@ class Devices {
 			if ( ! is_array( $all_devices ) || ! in_array( $payload->data->user->device, $all_devices, true ) ) {
 				return 'device unnabled';
 			}
-		}
-
-		// Check if user changed the password.
-		$pass = get_user_meta( $user->ID, 'jwt_auth_pass', true );
-
-		if ( $payload->data->user->pass !== $pass ) {
-			return 'password changed';
 		}
 
 		return '';
