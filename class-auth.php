@@ -64,6 +64,20 @@ class Auth {
 	 * Add the endpoints to the API
 	 */
 	public function register_rest_routes() {
+		/**
+		 * @OA\POST(
+		 *  path="/token",
+		 *  summary="Generate a JWT token for authentication",
+		 *  @OA\Response(
+		 *   response="403",
+		 *   description="The plugin isn't configured properly or the authentication data was incorrect"
+		 *  ),
+		 *  @OA\Response(
+		 * 	 response="200",
+		 *   description="Token successfully generated"
+		 *  )
+		 * )
+		 */
 		register_rest_route(
 			$this->namespace,
 			'token',
@@ -74,6 +88,20 @@ class Auth {
 			)
 		);
 
+		/**
+		 * @OA\POST(
+		 *  path="/token/validate",
+		 *  summary="Validate a JWT token",
+		 *  @OA\Response(
+		 * 	 response="403",
+		 *   description="The provided token is no longer a valid token"
+		 * 	),
+		 *  @OA\Response(
+		 * 	 response="200",
+		 *   description="The provided token is valid"
+		 *  )
+		 * )
+		 */
 		register_rest_route(
 			$this->namespace,
 			'token/validate',
