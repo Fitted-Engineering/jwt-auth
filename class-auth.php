@@ -356,10 +356,27 @@ class Auth {
 		if (!$token) {
             // Check if Basic Auth is used and create a token if so
             list($username, $password) = explode( ':', base64_decode( substr( $auth, 6 ) ) );
-            $request = new WP_REST_Request( 'POST', '/wp-json/jwt-auth/v1/token' );
-            $request->set_param( 'username', $username );
-            $request->set_param( 'password', $password );
-            $token = $this->generate_token( $request );
+
+            $user = $this->authenticate_user( $username, $password, false );
+
+            // If the authentication is failed return error response.
+            if ( is_wp_error( $user ) ) {
+                $error_code = $user->get_error_code();
+
+                return new WP_REST_Response(
+                    array(
+                        'success'    => false,
+                        'statusCode' => 403,
+                        'code'       => $error_code,
+                        'message'    => strip_tags( $user->get_error_message( $error_code ) ),
+                        'data'       => array(),
+                    ),
+                    403
+                );
+            }
+
+            $token = $this->generate_token( $user );
+
             if (is_array($token) && isset($token['token'])) $token = $token['token'];
             return;
         }
