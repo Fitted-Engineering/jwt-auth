@@ -321,11 +321,14 @@ class Auth {
 			$auth = isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : false;
 		}
 
-		$hash = end(explode("_", AUTH_COOKIE));
+        $auth_arr = explode("_", AUTH_COOKIE);
+
+		$hash = end($auth_arr);
 
 		if(! $auth) {
 			foreach(array_keys($_COOKIE) as $key) {
-				if(end(explode("_", $key)) === $hash) {
+				$cookie_arr = explode("_", $key);
+			    if(end($cookie_arr) === $hash) {
 					$auth = true;
 					break;
 				}
