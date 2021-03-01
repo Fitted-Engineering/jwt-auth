@@ -588,11 +588,6 @@ class Auth {
 			return $user_id;
 		}
 
-
-		if() {
-            return $;
-        }
-
         // Everything is ok here, return the user ID stored in the token.
         return $payload->data->user->id;
 	}
