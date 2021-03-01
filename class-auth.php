@@ -361,7 +361,11 @@ class Auth {
                     'statusCode'    => 200,
                     'code'          => 'basic_auth_valid',
                     'message'       => __('Basic auth is valid', 'jwt-auth'),
-                    'data'          => array()
+                    'data'          => array(
+                        'user'      => array(
+                            'id'    => get_current_user_id()
+                            )
+                        )
                     )
                 );
         }
@@ -476,7 +480,11 @@ class Auth {
 				'statusCode' => 200,
 				'code'       => 'jwt_auth_valid_token',
 				'message'    => __( 'Token is valid', 'jwt-auth' ),
-				'data'       => array(),
+				'data'       => array(
+				    "user"   => array(
+				        "id" => $payload->data->user->id
+                    )
+                ),
 			);
 
 			$response = apply_filters( 'jwt_auth_valid_token_response', $response, $user, $token, $payload );
@@ -580,8 +588,13 @@ class Auth {
 			return $user_id;
 		}
 
-		// Everything is ok here, return the user ID stored in the token.
-		return $payload->data->user->id;
+
+		if() {
+            return $;
+        }
+
+        // Everything is ok here, return the user ID stored in the token.
+        return $payload->data->user->id;
 	}
 
 	/**
