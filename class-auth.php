@@ -361,13 +361,9 @@ class Auth {
                     'statusCode'    => 200,
                     'code'          => 'basic_auth_valid',
                     'message'       => __('Basic auth is valid', 'jwt-auth'),
-                    'data'          => array(
-                        'user'      => array(
-                            'id'    => 0
-                            )
-                        )
-                    )
-                );
+                    'data'          => array()
+                )
+            );
         }
 
 		if ( ! $token ) {
@@ -587,6 +583,10 @@ class Auth {
 
 			return $user_id;
 		}
+
+		// If there is basic auth, there won't be these fields
+        if(!is_object($payload->data))
+            return isset($user_id) ? $user_id : 0;
 
         // Everything is ok here, return the user ID stored in the token.
         return $payload->data->user->id;
