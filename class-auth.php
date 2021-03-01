@@ -309,7 +309,7 @@ class Auth {
 	 * @return WP_REST_Response | Array Returns WP_REST_Response or token's $payload.
 	 */
 	public function validate_token( $return_response = true ) {
-		/**
+	    /**
 		 * Looking for the HTTP_AUTHORIZATION header, if not present just
 		 * return the user.
 		 */
@@ -363,7 +363,7 @@ class Auth {
                     'message'       => __('Basic auth is valid', 'jwt-auth'),
                     'data'          => array(
                         'user'      => array(
-                            'id'    => get_current_user_id()
+                            'id'    => 0
                             )
                         )
                     )
