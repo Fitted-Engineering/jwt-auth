@@ -224,7 +224,7 @@ class Auth {
 			'exp'  => $expire,
 			'data' => array(
 				'user' => array(
-					'id' => $user->ID,
+					'id' => $user->id,
 				),
 			),
 		);
@@ -356,29 +356,37 @@ class Auth {
 		if (!$token) {
             // Check if Basic Auth is used and create a token if so
             list($username, $password) = explode( ':', base64_decode( substr( $auth, 6 ) ) );
+            $request = new WP_REST_Request( 'POST', '/wp-json/jwt-auth/v1/token' );
+            $request->set_param( 'username', $username );
+            $request->set_param( 'password', $password );
 
-            $user = $this->authenticate_user( $username, $password, false );
+            $response = rest_do_request($request);
 
-            // If the authentication is failed return error response.
-            if ( is_wp_error( $user ) ) {
-                $error_code = $user->get_error_code();
-
-                return new WP_REST_Response(
-                    array(
-                        'success'    => false,
-                        'statusCode' => 403,
-                        'code'       => $error_code,
-                        'message'    => strip_tags( $user->get_error_message( $error_code ) ),
-                        'data'       => array(),
-                    ),
-                    403
-                );
+            if($response->is_error()){
+                $success = false;
+                $code = $response->as_error();
+                $message = $response->get_error_message();
+                $error_data = $response->get_error_data();
+                $status = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+            } else {
+                $success = true;
+                $status = 200;
+                $code = 'jwt_auth_valid_token';
+                $message = __('Token is valid', 'jwt-auth');
             }
 
-            $token = $this->generate_token( $user );
+            return new WP_REST_RESPONSE(
+                array(
+                    'success'       => $success,
+                    'statusCode'    => $status,
+                    'code'          => $code,
+                    'message'       => $message,
+                    'data'          => array()
+                    )
+                );
 
             if (is_array($token) && isset($token['token'])) $token = $token['token'];
-            return;
+
         }
 
 		if ( ! $token ) {
