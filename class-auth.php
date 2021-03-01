@@ -325,6 +325,7 @@ class Auth {
 
 		$hash = end($auth_arr);
 
+		//Check if basic auth is also present
 		if(! $auth) {
 			foreach(array_keys($_COOKIE) as $key) {
 				$cookie_arr = explode("_", $key);
@@ -354,39 +355,15 @@ class Auth {
 		list($token) = sscanf( $auth, 'Bearer %s' );
 
 		if (!$token) {
-            // Check if Basic Auth is used and create a token if so
-            list($username, $password) = explode( ':', base64_decode( substr( $auth, 6 ) ) );
-            $request = new WP_REST_Request( 'POST', '/wp-json/jwt-auth/v1/token' );
-            $request->set_param( 'username', $username );
-            $request->set_param( 'password', $password );
-
-            $response = rest_do_request($request);
-
-            if($response->is_error()){
-                $success = false;
-                $code = $response->as_error();
-                $message = $response->get_error_message();
-                $error_data = $response->get_error_data();
-                $status = isset( $error_data['status'] ) ? $error_data['status'] : 500;
-            } else {
-                $success = true;
-                $status = 200;
-                $code = 'jwt_auth_valid_token';
-                $message = __('Token is valid', 'jwt-auth');
-            }
-
             return new WP_REST_RESPONSE(
                 array(
-                    'success'       => $success,
-                    'statusCode'    => $status,
-                    'code'          => $code,
-                    'message'       => $message,
+                    'success'       => true,
+                    'statusCode'    => 200,
+                    'code'          => 'basic_auth_valid',
+                    'message'       => __('Basic auth is valid', 'jwt-auth'),
                     'data'          => array()
                     )
                 );
-
-            if (is_array($token) && isset($token['token'])) $token = $token['token'];
-
         }
 
 		if ( ! $token ) {
