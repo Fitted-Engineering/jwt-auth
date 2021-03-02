@@ -337,56 +337,28 @@ class Auth {
 			    $auth = true;
             }
 		}
+
+		$response = array(
+            'success'    => false,
+            'statusCode' => 403,
+            'code'       => 'jwt_auth_no_auth_header',
+            'message'    => $this->messages['jwt_auth_no_auth_header'],
+            'data'       => array(),
+        );
 		
 		if ( ! $auth ) {
-			return new WP_REST_Response(
-				array(
-					'success'    => false,
-					'statusCode' => 403,
-					'code'       => 'jwt_auth_no_auth_header',
-					'message'    => $this->messages['jwt_auth_no_auth_header'],
-					'data'       => array(),
-				)
-			);
+			return new WP_REST_Response($response, $response['statusCode']);
 		}
-
-		/**
-		 * The HTTP_AUTHORIZATION is present, verify the format.
-		 * If the format is wrong return the user.
-		 */
-		list($token) = sscanf( $auth, 'Bearer %s' );
-
-		//Above we verified there was basic authentication, so this statement is:
-        // "If there is no token but there is basic auth"
-		if (!$token) {
-		    //We return here because it will fail during the token validation further below
-            return new WP_REST_RESPONSE(
-                array(
-                    'success'       => true,
-                    'statusCode'    => 200,
-                    'code'          => 'basic_auth_valid',
-                    'message'       => __('Basic auth is valid', 'jwt-auth'),
-                    'data'          => array()
-                ),
-                200
-            );
-        }
 
 		// Get the Secret Key.
 		$secret_key = defined( 'JWT_PRIVATE_KEY' ) ? JWT_PRIVATE_KEY : false;
 
 		if ( ! $secret_key ) {
+		    $response['code'] = 'jwt_auth_bad_config';
+		    $response['message'] = __('JWT is not configured properly.', 'jwt_auth');
+
 		    //The secret key is set in the config file, if it fails here double check the config file
-			return new WP_REST_Response(
-				array(
-					'success'    => false,
-					'statusCode' => 403,
-					'code'       => 'jwt_auth_bad_config',
-					'message'    => __( 'JWT is not configured properly.', 'jwt-auth' ),
-					'data'       => array(),
-				),
-				403
-			);
+			return new WP_REST_Response( $response, $response['statusCode'] );
 		}
 
 		// Try to decode the token.
@@ -395,106 +367,88 @@ class Auth {
 			$keyfile = fopen(JWT_PUBLIC_KEY, 'r');
 			$publickey = fread($keyfile, filesize(JWT_PUBLIC_KEY));
 			fclose($keyfile);
-			$payload = JWT::decode( $token, $publickey, array( $alg ) );
+			$attempt_validate = true;
 
-			// The Token is decoded now validate the iss.
-			if ( $payload->iss !== $this->get_iss() ) {
-				// The iss do not match, return error.
-				return new WP_REST_Response(
-					array(
-						'success'    => false,
-						'statusCode' => 403,
-						'code'       => 'jwt_auth_bad_iss',
-						'message'    => __( 'The iss do not match with this server.', 'jwt-auth' ),
-						'data'       => array(),
-					),
-					403
-				);
-			}
+            /**
+             * The HTTP_AUTHORIZATION is present, verify the format.
+             * If the format is wrong return the user.
+             */
+            list($token) = sscanf( $auth, 'Bearer %s' );
 
-			// Check the user id existence in the token.
-			if ( ! isset( $payload->data->user->ID ) ) {
-				// No user id in the token, abort!!
-				return new WP_REST_Response(
-					array(
-						'success'    => false,
-						'statusCode' => 403,
-						'code'       => 'jwt_auth_bad_request',
-						'message'    => __( 'User ID not found in the token.', 'jwt-auth' ),
-						'data'       => array(),
-					),
-					403
-				);
-			}
+            //Above we verified there was basic authentication, so this statement is:
+            // "If there is no token but there is basic auth"
+            if (!$token) {
+                $response['success'] = true;
+                $response['statusCode'] = 200;
+                $response['code'] = 'basic_auth_valid';
+                $response['message'] = __('Basic auth is valid.', 'jwt-auth');
+            }
 
-			// So far so good, check if the given user id exists in db.
-			$user = get_user_by( 'id', $payload->data->user->ID );
+            if($response['statusCode'] != 200) {
 
-			if ( ! $user ) {
-				// No user id in the token, abort!!
-				return new WP_REST_Response(
-					array(
-						'success'    => false,
-						'statusCode' => 403,
-						'code'       => 'jwt_auth_user_not_found',
-						'message'    => __( "User doesn't exist", 'jwt-auth' ),
-						'data'       => array(),
-					),
-					403
-				);
-			}
+                $payload = JWT::decode($token, $publickey, array($alg));
 
-			// Check extra condition if exists.
-			$failed_msg = apply_filters( 'jwt_auth_extra_token_check', '', $user, $token, $payload );
+                // The Token is decoded now validate the iss.
+                if ($payload->iss !== $this->get_iss()) {
+                    $response['code'] = 'jwt_auth_bad_iss';
+                    $response['message'] = __('The iss do not match with this server.', 'jwt-auth');
+                    $attempt_validate = false;
+                }
 
-			if ( ! empty( $failed_msg ) ) {
-				// No user id in the token, abort!!
-				return new WP_REST_Response(
-					array(
-						'success'    => false,
-						'statusCode' => 403,
-						'code'       => 'jwt_auth_obsolete_token',
-						'message'    => __( 'Token is obsolete', 'jwt-auth' ),
-						'data'       => array(),
-					),
-					403
-				);
-			}
+                // Check the user id existence in the token.
+                if (!isset($payload->data->user->ID)) {
+                    $response['code'] = 'jwt_auth_bad_request';
+                    $response['message'] = __('User ID not found in the token.', 'jwt-auth');
+                    $attempt_validate = false;
+                }
 
-			// Everything looks good, return the payload if $return_response is set to false.
-			if ( ! $return_response ) {
-				return $payload;
-			}
+                // So far so good, check if the given user id exists in db.
+                $user = get_user_by('id', $payload->data->user->ID);
 
-			$response = array(
-				'success'    => true,
-				'statusCode' => 200,
-				'code'       => 'jwt_auth_valid_token',
-				'message'    => __( 'Token is valid', 'jwt-auth' ),
-				'data'       => array(
-				    "user"   => array(
-				        "id" => $payload->data->user->id
-                    )
-                ),
-			);
+                if (!$user) {
+                    // No user id in the token
+                    $response['code'] = 'jwt_auth_user_not_found';
+                    $response['message'] = __("User doesn't exist", 'jwt-auth');
 
-			$response = apply_filters( 'jwt_auth_valid_token_response', $response, $user, $token, $payload );
+                }
 
-			// Otherwise, return success response.
-			return new WP_REST_Response( $response );
+                if($attempt_validate) {
+                    // Check extra condition if exists.
+                    $failed_msg = apply_filters('jwt_auth_extra_token_check', '', $user, $token, $payload);
+
+                    if (!empty($failed_msg)) {
+                        $response['code'] = 'jwt_auth_obsolete_token';
+                        $response['message'] = __('Token is obsolete', 'jwt-auth');
+                    }
+
+                    $response = array(
+                        'success' => true,
+                        'statusCode' => 200,
+                        'code' => 'jwt_auth_valid_token',
+                        'message' => __('Token is valid', 'jwt-auth'),
+                        'data' => array(
+                            "user" => array(
+                                "id" => $payload->data->user->id
+                            )
+                        ),
+                    );
+                    // Otherwise, return success response.
+                    $response = apply_filters('jwt_auth_valid_token_response', $response, $user, $token, $payload);
+                }
+            }
 		} catch ( Exception $e ) {
 			// Something is wrong when trying to decode the token, return error response.
-			return new WP_REST_Response(
-				array(
-					'success'    => false,
-					'statusCode' => 403,
-					'code'       => 'jwt_auth_invalid_token',
-					'message'    => $e->getMessage(),
-					'data'       => array(),
-				),
-				403
-			);
+			$response['code'] = 'jwt_auth_invalid_token';
+			$response['message'] = $e->getMessage();
 		}
+
+
+        // Everything looks good, return the payload if $return_response is set to false.
+        if (!$return_response && $response['statusCode'] === 200) {
+            return $payload;
+        }
+
+        return new WP_REST_Response( $response, $response['statusCode'] );
 	}
 
 	/**
