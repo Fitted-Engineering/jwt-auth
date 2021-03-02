@@ -399,7 +399,7 @@ class Auth {
                 }
 
                 // So far so good, check if the given user id exists in db.
-                $user = get_user_by('id', $payload->data->user->ID);
+                $user = get_user_by('id', $payload->data->user->id);
 
                 if (!$user) {
                     // No user id in the token
