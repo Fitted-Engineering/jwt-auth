@@ -224,7 +224,7 @@ class Auth {
 			'exp'  => $expire,
 			'data' => array(
 				'user' => array(
-					'id' => $user->id,
+					'id' => $user->ID,
 				),
 			),
 		);
