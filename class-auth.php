@@ -392,7 +392,7 @@ class Auth {
                 }
 
                 // Check the user id existence in the token.
-                if (!isset($payload->data->user->ID)) {
+                if (!isset($payload->data->user->id)) {
                     $response['code'] = 'jwt_auth_bad_request';
                     $response['message'] = __('User ID not found in the token.', 'jwt-auth');
                     $attempt_validate = false;
