@@ -327,10 +327,15 @@ class Auth {
 
 		//Check if basic auth is also present
 		if(! $auth) {
+		    //WP does not set the keys in a case consistent way
 			if(isset($_COOKIE['nonce'])) {
-                $cookie_arr = explode("_", $_COOKIE['nonce']);
+			    $cookie_arr = explode("_", $_COOKIE['nonce']);
+            } else if (isset($_COOKIE['Nonce'])) {
+                $cookie_arr = explode("_", $_COOKIE['Nonce']);
             } else if (isset($_COOKIE['X-WP-Nonce'])) {
 			    $cookie_arr = explode("_", $_COOKIE['X-WP-Nonce']);
+            } else if (isset($_COOKIE['x-wp-nonce'])) {
+			    $cookie_arr = explode("_", $_COOKIE['x-wp-nonce']);
             }
 
 			if(isset($cookie_arr) && end($cookie_arr) === $hash) {
