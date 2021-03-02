@@ -327,18 +327,9 @@ class Auth {
 
 		//Check if basic auth is also present
 		if(! $auth) {
-		    //WP does not set the keys in a case consistent way
-			if(isset($_COOKIE['nonce'])) {
-			    $cookie_arr = explode("_", $_COOKIE['nonce']);
-            } else if (isset($_COOKIE['Nonce'])) {
-                $cookie_arr = explode("_", $_COOKIE['Nonce']);
-            } else if (isset($_COOKIE['X-WP-Nonce'])) {
-			    $cookie_arr = explode("_", $_COOKIE['X-WP-Nonce']);
-            } else if (isset($_COOKIE['x-wp-nonce'])) {
-			    $cookie_arr = explode("_", $_COOKIE['x-wp-nonce']);
-            }
-
-			if(isset($cookie_arr) && end($cookie_arr) === $hash) {
+		    //If they are logged into the wordpress admin panel this should be set
+		    $cookie_key = "wordpress_logged_in_" . $hash;
+			if(isset($_COOKIE[$cookie_key])) {
 			    $auth = true;
             }
 		}
@@ -347,7 +338,7 @@ class Auth {
             'success'    => false,
             'statusCode' => 403,
             'code'       => 'jwt_auth_no_auth_header',
-            'message'    => $this->messages['jwt_auth_no_auth_header'],
+            'message'    => $hash,
             'data'       => array(),
         );
 		
