@@ -366,18 +366,6 @@ class Auth {
             );
         }
 
-		if ( ! $token ) {
-			return new WP_REST_Response(
-				array(
-					'success'    => false,
-					'statusCode' => 403,
-					'code'       => 'jwt_auth_bad_auth_header',
-					'message'    => $this->messages['jwt_auth_bad_auth_header'],
-					'data'       => array(),
-				)
-			);
-		}
-
 		// Get the Secret Key.
 		$secret_key = defined( 'JWT_PRIVATE_KEY' ) ? JWT_PRIVATE_KEY : false;
 
@@ -418,7 +406,7 @@ class Auth {
 			}
 
 			// Check the user id existence in the token.
-			if ( ! isset( $payload->data->user->id ) ) {
+			if ( ! isset( $payload->data->user->ID ) ) {
 				// No user id in the token, abort!!
 				return new WP_REST_Response(
 					array(
@@ -433,7 +421,7 @@ class Auth {
 			}
 
 			// So far so good, check if the given user id exists in db.
-			$user = get_user_by( 'id', $payload->data->user->id );
+			$user = get_user_by( 'id', $payload->data->user->ID );
 
 			if ( ! $user ) {
 				// No user id in the token, abort!!

@@ -61,8 +61,8 @@ class Devices {
 		}
 
 		// Add a pass if user doesn't have yet.
-		$pass = get_user_meta( $user->id, 'jwt_auth_pass', true );
-		$pass = ( empty( $pass ) ) ? $this->refresh_pass( $user->id ) : $pass;
+		$pass = get_user_meta( $user->ID, 'jwt_auth_pass', true );
+		$pass = ( empty( $pass ) ) ? $this->refresh_pass( $user->ID ) : $pass;
 		$pass = apply_filters( 'jwt_auth_pass', $pass );
 
 		$payload['data']['user']['device'] = $current_device;
