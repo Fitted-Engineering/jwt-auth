@@ -430,6 +430,11 @@ class Auth {
                     );
                     // Otherwise, return success response.
                     $response = apply_filters('jwt_auth_valid_token_response', $response, $user, $token, $payload);
+
+                    // Everything looks good, return the payload if $return_response is set to false.
+                    if (!$return_response && $response['statusCode'] === 200) {
+                        return $payload;
+                    }
                 }
             }
 		} catch ( Exception $e ) {
@@ -438,11 +443,6 @@ class Auth {
 			$response['message'] = $e->getMessage();
 		}
 
-
-        // Everything looks good, return the payload if $return_response is set to false.
-        if (!$return_response && $response['statusCode'] === 200) {
-            return $payload;
-        }
 
         return new WP_REST_Response( $response, $response['statusCode'] );
 	}
@@ -530,7 +530,7 @@ class Auth {
 		}
 
 		// If there is basic auth, there won't be these fields
-        if(!is_object($payload->data))
+        if(!is_object($payload))
             return isset($user_id) ? $user_id : 0;
 
         // Everything is ok here, return the user ID stored in the token.
