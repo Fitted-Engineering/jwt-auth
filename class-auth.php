@@ -530,7 +530,7 @@ class Auth {
 		}
 
 		// If there is basic auth, there won't be these fields
-        if(!is_object($payload))
+        if(!is_object($payload) || !is_object($payload->data))
             return isset($user_id) ? $user_id : 0;
 
         // Everything is ok here, return the user ID stored in the token.
