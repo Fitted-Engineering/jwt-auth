@@ -327,13 +327,15 @@ class Auth {
 
 		//Check if basic auth is also present
 		if(! $auth) {
-			foreach(array_keys($_COOKIE) as $key) {
-				$cookie_arr = explode("_", $key);
-			    if(end($cookie_arr) === $hash) {
-					$auth = true;
-					break;
-				}
-			}
+			if(isset($_COOKIE['nonce'])) {
+                $cookie_arr = explode("_", $_COOKIE['nonce']);
+            } else if (isset($_COOKIE['X-WP-Nonce'])) {
+			    $cookie_arr = explode("_", $_COOKIE['X-WP-Nonce']);
+            }
+
+			if(isset($cookie_arr) && end($cookie_arr) === $hash) {
+			    $auth = true;
+            }
 		}
 		
 		if ( ! $auth ) {
@@ -354,7 +356,10 @@ class Auth {
 		 */
 		list($token) = sscanf( $auth, 'Bearer %s' );
 
+		//Above we verified there was basic authentication, so this statement is:
+        // "If there is no token but there is basic auth"
 		if (!$token) {
+		    //We return here because it will fail during the token validation further below
             return new WP_REST_RESPONSE(
                 array(
                     'success'       => true,
@@ -362,7 +367,8 @@ class Auth {
                     'code'          => 'basic_auth_valid',
                     'message'       => __('Basic auth is valid', 'jwt-auth'),
                     'data'          => array()
-                )
+                ),
+                200
             );
         }
 
@@ -370,6 +376,7 @@ class Auth {
 		$secret_key = defined( 'JWT_PRIVATE_KEY' ) ? JWT_PRIVATE_KEY : false;
 
 		if ( ! $secret_key ) {
+		    //The secret key is set in the config file, if it fails here double check the config file
 			return new WP_REST_Response(
 				array(
 					'success'    => false,
